@@ -5,28 +5,32 @@ import android.net.Uri
 import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,10 +39,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.aicaller.app.ai.ChatRole
+import com.aicaller.app.ui.theme.GeminiBlue
 import com.aicaller.app.ui.theme.GeminiGradient
 
 @Composable
@@ -64,11 +70,12 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
+    Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 24.dp)) {
         Text(
             text = "Gemini Assistant",
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(horizontal = 8.dp)
         )
 
         if (uiState.transcript.isEmpty()) {
@@ -76,44 +83,26 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
                 Text(
                     "Try \"Call mom\", \"Block this number\", \"Read my last call summary\", \"Search for the dentist\", or just ask me anything.",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 24.dp)
                 )
             }
         } else {
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f).fillMaxWidth(),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 16.dp)
+                contentPadding = PaddingValues(vertical = 16.dp)
             ) {
                 items(uiState.transcript) { message ->
-                    ChatBubble(
-                        icon = if (message.role == ChatRole.USER) Icons.Filled.Person else Icons.Filled.AutoAwesome,
-                        label = if (message.role == ChatRole.USER) "You said" else "Gemini",
-                        message = message.text,
-                        containerColor = if (message.role == ChatRole.USER) {
-                            MaterialTheme.colorScheme.surfaceVariant
-                        } else {
-                            MaterialTheme.colorScheme.primaryContainer
-                        },
-                        labelColor = if (message.role == ChatRole.USER) {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        } else {
-                            MaterialTheme.colorScheme.primary
-                        }
-                    )
+                    ChatBubble(isUser = message.role == ChatRole.USER, message = message.text)
+                }
+                if (uiState.isProcessing) {
+                    item { TypingIndicatorBubble() }
                 }
             }
         }
 
-        if (uiState.isProcessing) {
-            CircularProgressIndicator(modifier = Modifier.padding(vertical = 8.dp))
-        }
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             FilledIconButton(
                 onClick = {
                     val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -123,6 +112,7 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
                     speechLauncher.launch(intent)
                 },
                 modifier = Modifier
+                    .padding(top = 8.dp)
                     .size(72.dp)
                     .background(brush = Brush.linearGradient(GeminiGradient), shape = MaterialTheme.shapes.extraLarge)
             ) {
@@ -132,32 +122,84 @@ fun AssistantScreen(viewModel: AssistantViewModel = hiltViewModel()) {
     }
 }
 
+/** An iMessage-style chat bubble: right-aligned blue for the user, left-aligned gray for the assistant. */
 @Composable
-private fun ChatBubble(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    message: String,
-    containerColor: androidx.compose.ui.graphics.Color,
-    labelColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurfaceVariant
-) {
-    Card(
+private fun ChatBubble(isUser: Boolean, message: String) {
+    val bubbleColor = if (isUser) GeminiBlue else MaterialTheme.colorScheme.surfaceVariant
+    val textColor = if (isUser) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+
+    val shape = if (isUser) {
+        RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 20.dp, bottomEnd = 4.dp)
+    } else {
+        RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 4.dp, bottomEnd = 20.dp)
+    }
+
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 12.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
+            .padding(vertical = 3.dp, horizontal = 4.dp),
+        horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            androidx.compose.foundation.layout.Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, tint = labelColor, modifier = Modifier.size(16.dp))
-                Text(
-                    " $label",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = labelColor,
-                    modifier = Modifier.padding(start = 4.dp)
-                )
-            }
-            Text(message, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 4.dp))
+        Surface(
+            color = bubbleColor,
+            shape = shape,
+            shadowElevation = 0.dp,
+            modifier = Modifier.widthIn(max = 280.dp)
+        ) {
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyLarge,
+                color = textColor,
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+            )
         }
     }
+}
+
+/** Animated "..." bubble shown on the assistant's side while a response is loading. */
+@Composable
+private fun TypingIndicatorBubble() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 3.dp, horizontal = 4.dp),
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp, bottomStart = 4.dp, bottomEnd = 20.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(3) { index ->
+                    TypingDot(delayMillis = index * 150)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TypingDot(delayMillis: Int) {
+    val transition = rememberInfiniteTransition(label = "typing-dot")
+    val scale by transition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 600, delayMillis = delayMillis),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "typing-dot-scale"
+    )
+    Box(
+        modifier = Modifier
+            .size(8.dp)
+            .background(
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = scale),
+                shape = androidx.compose.foundation.shape.CircleShape
+            )
+    )
 }
