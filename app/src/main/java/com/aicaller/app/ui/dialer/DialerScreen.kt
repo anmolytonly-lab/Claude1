@@ -55,7 +55,8 @@ fun DialerScreen(viewModel: DialerViewModel = hiltViewModel()) {
 
         Text(
             text = number.ifEmpty { "Enter a number" },
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.headlineMedium,
+            color = if (number.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 32.dp)
         )
 

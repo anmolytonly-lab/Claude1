@@ -4,8 +4,8 @@ package com.aicaller.app.ai
  * Abstraction over the AI backend used for call summarization, spam
  * analysis, auto-reply drafting and voice command parsing.
  *
- * The production implementation ([AnthropicAiClient]) calls the Claude API.
- * When no API key is configured, [LocalHeuristicAiClient] provides
+ * The production implementation ([GeminiAiClient]) calls the Google Gemini
+ * API. When no API key is configured, [LocalHeuristicAiClient] provides
  * on-device fallbacks so the app remains fully functional offline.
  */
 interface AiClient {

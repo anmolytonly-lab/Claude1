@@ -1,7 +1,7 @@
 # AI Caller
 
 An Android dialer/caller app (Kotlin + Jetpack Compose) with built-in AI features powered by the
-Claude API, with on-device fallbacks so the app keeps working offline.
+Google Gemini API, with on-device fallbacks so the app keeps working offline.
 
 ## Features
 
@@ -10,7 +10,7 @@ Claude API, with on-device fallbacks so the app keeps working offline.
   local heuristics plus an optional AI risk assessment, then silences or blocks high-risk calls.
   Users can report numbers as spam from any call.
 - **Live transcription & call summaries** - an on-device `SpeechRecognizer` transcribes calls in
-  real time via a foreground service; after the call, Claude generates a summary, action items,
+  real time via a foreground service; after the call, Gemini generates a summary, action items,
   and sentiment score.
 - **Smart contacts & insights** - call summaries roll up into per-contact AI insights: suggested
   tags, relationship type, running sentiment average, and last-call summary.
@@ -22,7 +22,7 @@ Claude API, with on-device fallbacks so the app keeps working offline.
 
 ```
 app/src/main/java/com/aicaller/app/
-├── ai/                # AiClient interface, Claude (Anthropic) client, local heuristic fallback
+├── ai/                # AiClient interface, Gemini client, local heuristic fallback
 ├── data/
 │   ├── local/         # Room database, entities, DAOs
 │   └── repository/    # Contact, Call, Spam and AutoReply repositories
@@ -39,17 +39,17 @@ app/src/main/java/com/aicaller/app/
 2. Build & run on a device or emulator (minSdk 26).
 3. Grant the requested runtime permissions (phone, contacts, microphone, call log, SMS).
 4. In **Settings**:
-   - Optionally add an **Anthropic API key** to enable Claude-powered summaries, spam analysis,
-     auto-replies, and voice commands. Without a key, the app uses on-device heuristics for every
-     feature.
+   - Optionally add a **Google Gemini API key** (from [Google AI Studio](https://aistudio.google.com/app/apikey))
+     to enable Gemini-powered summaries, spam analysis, auto-replies, and voice commands. Without a
+     key, the app uses on-device heuristics for every feature.
    - Tap **Set as call screening app** so the AI spam-detection service is active.
    - Toggle individual features (spam screening, auto-block, transcription, smart auto-reply).
 
 ## Notes
 
-- All AI calls go through `AiClient` (`ai/AiClient.kt`). The Claude-backed implementation
-  (`AnthropicAiClient`) automatically falls back to `LocalHeuristicAiClient` if no API key is set
+- All AI calls go through `AiClient` (`ai/AiClient.kt`). The Gemini-backed implementation
+  (`GeminiAiClient`) automatically falls back to `LocalHeuristicAiClient` if no API key is set
   or a request fails, so the app is fully usable offline.
-- The Anthropic API key is stored using `EncryptedSharedPreferences`.
+- The Gemini API key is stored using `EncryptedSharedPreferences`.
 - Call recordings/transcription require the user's consent and may be subject to local call
   recording laws - review applicable regulations before enabling in production.

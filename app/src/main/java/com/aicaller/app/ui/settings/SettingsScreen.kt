@@ -69,7 +69,7 @@ fun SettingsScreen(
             Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("AI provider", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 Text(
-                    "Add your Anthropic API key to enable Claude-powered summaries, spam analysis, " +
+                    "Add your Google Gemini API key to enable Gemini-powered summaries, spam analysis, " +
                         "auto-replies and voice commands. Without a key, AI Caller still works using " +
                         "on-device heuristics.",
                     style = MaterialTheme.typography.bodyLarge,
@@ -78,7 +78,7 @@ fun SettingsScreen(
                 OutlinedTextField(
                     value = viewModel.apiKey,
                     onValueChange = viewModel::onApiKeyChanged,
-                    label = { Text("Anthropic API key") },
+                    label = { Text("Gemini API key") },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     modifier = Modifier.fillMaxWidth()

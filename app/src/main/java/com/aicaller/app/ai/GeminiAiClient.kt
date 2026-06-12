@@ -3,26 +3,26 @@ package com.aicaller.app.ai
 import com.aicaller.app.util.SecurePrefs
 import com.google.gson.Gson
 import com.google.gson.JsonSyntaxException
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * Claude-backed [AiClient]. Falls back to [LocalHeuristicAiClient] when no
+ * Gemini-backed [AiClient]. Falls back to [LocalHeuristicAiClient] when no
  * API key is configured or the request fails, so every feature keeps
  * working (with reduced fidelity) offline.
  */
 @Singleton
-class AnthropicAiClient @Inject constructor(
-    private val api: AnthropicApi,
+class GeminiAiClient @Inject constructor(
+    private val api: GeminiApi,
     private val securePrefs: SecurePrefs,
     private val fallback: LocalHeuristicAiClient,
     private val gson: Gson
 ) : AiClient {
 
-    private suspend fun <T> withClaude(block: suspend (apiKey: String) -> T, onFallback: suspend () -> T): T {
-        val apiKey = securePrefs.anthropicApiKey
+    private suspend fun <T> withGemini(block: suspend (apiKey: String) -> T, onFallback: suspend () -> T): T {
+        val apiKey = securePrefs.geminiApiKey
         if (apiKey.isNullOrBlank()) return onFallback()
         return try {
             withContext(Dispatchers.IO) { block(apiKey) }
@@ -31,8 +31,20 @@ class AnthropicAiClient @Inject constructor(
         }
     }
 
+    private suspend fun generate(apiKey: String, prompt: String, maxOutputTokens: Int = 1024): String {
+        val response = api.generateContent(
+            model = GeminiApi.MODEL,
+            apiKey = apiKey,
+            request = GeminiGenerateRequest(
+                contents = listOf(GeminiContent(role = "user", parts = listOf(GeminiPart(text = prompt)))),
+                generationConfig = GeminiGenerationConfig(temperature = 0.4, maxOutputTokens = maxOutputTokens)
+            )
+        )
+        return response.text
+    }
+
     override suspend fun summarizeCall(transcript: String, contactName: String?): CallSummaryResult =
-        withClaude(
+        withGemini(
             block = { apiKey ->
                 val prompt = """
                     Summarize the following phone call transcript${contactName?.let { " with $it" } ?: ""}.
@@ -43,19 +55,13 @@ class AnthropicAiClient @Inject constructor(
                     $transcript
                 """.trimIndent()
 
-                val response = api.createMessage(
-                    apiKey = apiKey,
-                    request = AnthropicMessageRequest(
-                        messages = listOf(AnthropicMessage(role = "user", content = prompt))
-                    )
-                )
-                parseJson(response.text) ?: fallback.summarizeCall(transcript, contactName)
+                parseJson<CallSummaryResult>(generate(apiKey, prompt)) ?: fallback.summarizeCall(transcript, contactName)
             },
             onFallback = { fallback.summarizeCall(transcript, contactName) }
         )
 
     override suspend fun analyzeSpamRisk(phoneNumber: String, recentTranscriptSnippet: String?): SpamAnalysisResult =
-        withClaude(
+        withGemini(
             block = { apiKey ->
                 val prompt = """
                     Assess the spam/scam risk of an incoming phone call from "$phoneNumber".
@@ -64,20 +70,14 @@ class AnthropicAiClient @Inject constructor(
                     {"riskScore": integer 0-100, "label": string, "reason": string, "shouldBlock": boolean, "shouldScreen": boolean}
                 """.trimIndent()
 
-                val response = api.createMessage(
-                    apiKey = apiKey,
-                    request = AnthropicMessageRequest(
-                        max_tokens = 400,
-                        messages = listOf(AnthropicMessage(role = "user", content = prompt))
-                    )
-                )
-                parseJson(response.text) ?: fallback.analyzeSpamRisk(phoneNumber, recentTranscriptSnippet)
+                parseJson<SpamAnalysisResult>(generate(apiKey, prompt, maxOutputTokens = 400))
+                    ?: fallback.analyzeSpamRisk(phoneNumber, recentTranscriptSnippet)
             },
             onFallback = { fallback.analyzeSpamRisk(phoneNumber, recentTranscriptSnippet) }
         )
 
     override suspend fun generateAutoReply(context: AutoReplyContext): String =
-        withClaude(
+        withGemini(
             block = { apiKey ->
                 val prompt = """
                     Draft a short, friendly SMS auto-reply (max 200 characters) to send to someone whose call was just
@@ -88,20 +88,13 @@ class AnthropicAiClient @Inject constructor(
                     Respond with ONLY the message text, no quotes, no JSON.
                 """.trimIndent()
 
-                val response = api.createMessage(
-                    apiKey = apiKey,
-                    request = AnthropicMessageRequest(
-                        max_tokens = 150,
-                        messages = listOf(AnthropicMessage(role = "user", content = prompt))
-                    )
-                )
-                response.text.trim().ifBlank { fallback.generateAutoReply(context) }
+                generate(apiKey, prompt, maxOutputTokens = 150).trim().ifBlank { fallback.generateAutoReply(context) }
             },
             onFallback = { fallback.generateAutoReply(context) }
         )
 
     override suspend fun parseVoiceCommand(utterance: String, knownContactNames: List<String>): VoiceCommandResult =
-        withClaude(
+        withGemini(
             block = { apiKey ->
                 val prompt = """
                     Interpret this voice command for a phone dialer app: "$utterance"
@@ -110,14 +103,8 @@ class AnthropicAiClient @Inject constructor(
                     {"action": one of ["CALL_CONTACT","BLOCK_NUMBER","READ_LAST_SUMMARY","SEARCH_CALL_HISTORY","UNKNOWN"], "target": string or null, "message": string or null}
                 """.trimIndent()
 
-                val response = api.createMessage(
-                    apiKey = apiKey,
-                    request = AnthropicMessageRequest(
-                        max_tokens = 200,
-                        messages = listOf(AnthropicMessage(role = "user", content = prompt))
-                    )
-                )
-                parseJson(response.text) ?: fallback.parseVoiceCommand(utterance, knownContactNames)
+                parseJson<VoiceCommandResult>(generate(apiKey, prompt, maxOutputTokens = 200))
+                    ?: fallback.parseVoiceCommand(utterance, knownContactNames)
             },
             onFallback = { fallback.parseVoiceCommand(utterance, knownContactNames) }
         )

@@ -1,12 +1,11 @@
 package com.aicaller.app.di
 
 import com.aicaller.app.ai.AiClient
-import com.aicaller.app.ai.AnthropicApi
+import com.aicaller.app.ai.GeminiApi
 import com.google.gson.Gson
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -40,22 +39,22 @@ object AiModule {
     @Singleton
     fun provideRetrofit(client: OkHttpClient, gson: Gson): Retrofit =
         Retrofit.Builder()
-            .baseUrl(AnthropicApi.BASE_URL)
+            .baseUrl(GeminiApi.BASE_URL)
             .client(client)
             .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
 
     @Provides
     @Singleton
-    fun provideAnthropicApi(retrofit: Retrofit): AnthropicApi = retrofit.create(AnthropicApi::class.java)
+    fun provideGeminiApi(retrofit: Retrofit): GeminiApi = retrofit.create(GeminiApi::class.java)
 }
 
-/** Binds the [AiClient] interface to the Claude-backed implementation (with built-in offline fallback). */
+/** Binds the [AiClient] interface to the Gemini-backed implementation (with built-in offline fallback). */
 @Module
 @InstallIn(SingletonComponent::class)
 object AiBindingModule {
 
     @Provides
     @Singleton
-    fun provideAiClient(anthropicAiClient: com.aicaller.app.ai.AnthropicAiClient): AiClient = anthropicAiClient
+    fun provideAiClient(geminiAiClient: com.aicaller.app.ai.GeminiAiClient): AiClient = geminiAiClient
 }

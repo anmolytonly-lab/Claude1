@@ -6,7 +6,7 @@ import javax.inject.Inject
 /**
  * Offline fallback used when no API key is configured, or when a network
  * call fails. Keeps every feature usable without an internet connection,
- * just with less nuanced results than the Claude-backed client.
+ * just with less nuanced results than the Gemini-backed client.
  */
 class LocalHeuristicAiClient @Inject constructor() : AiClient {
 

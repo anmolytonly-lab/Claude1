@@ -13,7 +13,7 @@ class SettingsViewModel @Inject constructor(
     private val securePrefs: SecurePrefs
 ) : ViewModel() {
 
-    var apiKey by mutableStateOf(securePrefs.anthropicApiKey ?: "")
+    var apiKey by mutableStateOf(securePrefs.geminiApiKey ?: "")
         private set
 
     var spamScreeningEnabled by mutableStateOf(securePrefs.spamScreeningEnabled)
@@ -30,7 +30,7 @@ class SettingsViewModel @Inject constructor(
 
     fun onApiKeyChanged(value: String) {
         apiKey = value
-        securePrefs.anthropicApiKey = value.trim().ifBlank { null }
+        securePrefs.geminiApiKey = value.trim().ifBlank { null }
     }
 
     fun onSpamScreeningChanged(enabled: Boolean) {
