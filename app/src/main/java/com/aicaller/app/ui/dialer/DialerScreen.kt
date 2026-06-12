@@ -20,6 +20,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -85,7 +86,7 @@ fun DialerScreen(viewModel: DialerViewModel = hiltViewModel()) {
                         context.startActivity(intent)
                     }
                 },
-                colors = ButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = MaterialTheme.colorScheme.secondary),
                 modifier = Modifier.size(64.dp)
             ) {
                 Icon(Icons.Filled.Call, contentDescription = "Call")
