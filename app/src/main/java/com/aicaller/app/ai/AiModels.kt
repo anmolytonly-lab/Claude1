@@ -1,5 +1,13 @@
 package com.aicaller.app.ai
 
+/** A single turn in an assistant conversation, used for multi-turn context. */
+data class ChatMessage(
+    val role: ChatRole,
+    val text: String
+)
+
+enum class ChatRole { USER, ASSISTANT }
+
 /** Result of summarizing a call transcript. */
 data class CallSummaryResult(
     val summary: String,

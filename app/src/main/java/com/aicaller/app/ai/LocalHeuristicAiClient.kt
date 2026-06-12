@@ -71,6 +71,20 @@ class LocalHeuristicAiClient @Inject constructor() : AiClient {
         }
     }
 
+    override suspend fun chat(message: String, history: List<ChatMessage>, context: String): String {
+        val lower = message.lowercase()
+        return when {
+            lower.contains("hello") || lower.contains("hi ") || lower == "hi" ->
+                "Hi there! I can help with calls, contacts, and your call history. What would you like to do?"
+            context.isNotBlank() && (lower.contains("summary") || lower.contains("recent") || lower.contains("call")) ->
+                "Here's what I know from recent activity:\n$context"
+            lower.contains("thank") ->
+                "You're welcome!"
+            else ->
+                "I'm running in offline mode right now, so I can't have a full conversation, but I can still place calls, block numbers, and search your call history."
+        }
+    }
+
     companion object {
         fun timeOfDayLabel(): String {
             val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)

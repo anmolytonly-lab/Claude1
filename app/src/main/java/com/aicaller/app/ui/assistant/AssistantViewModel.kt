@@ -5,6 +5,8 @@ import android.speech.tts.TextToSpeech
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aicaller.app.ai.AiClient
+import com.aicaller.app.ai.ChatMessage
+import com.aicaller.app.ai.ChatRole
 import com.aicaller.app.ai.VoiceAction
 import com.aicaller.app.data.repository.CallRepository
 import com.aicaller.app.data.repository.ContactRepository
@@ -24,7 +26,8 @@ import javax.inject.Inject
 data class AssistantUiState(
     val isProcessing: Boolean = false,
     val lastHeardText: String? = null,
-    val responseText: String? = null
+    val responseText: String? = null,
+    val transcript: List<ChatMessage> = emptyList()
 )
 
 @HiltViewModel
@@ -45,7 +48,13 @@ class AssistantViewModel @Inject constructor(
     private var textToSpeech: TextToSpeech? = TextToSpeech(context, null)
 
     fun processVoiceCommand(utterance: String) {
-        _uiState.value = _uiState.value.copy(isProcessing = true, lastHeardText = utterance, responseText = null)
+        val historyBefore = _uiState.value.transcript
+        _uiState.value = _uiState.value.copy(
+            isProcessing = true,
+            lastHeardText = utterance,
+            responseText = null,
+            transcript = historyBefore + ChatMessage(ChatRole.USER, utterance)
+        )
 
         viewModelScope.launch {
             val contacts = contactRepository.getDeviceContacts()
@@ -56,12 +65,30 @@ class AssistantViewModel @Inject constructor(
                 VoiceAction.BLOCK_NUMBER -> handleBlock(result.target)
                 VoiceAction.READ_LAST_SUMMARY -> handleReadLastSummary()
                 VoiceAction.SEARCH_CALL_HISTORY -> handleSearch(result.target)
-                VoiceAction.UNKNOWN -> result.message ?: "Sorry, I didn't understand that."
+                VoiceAction.UNKNOWN -> handleChat(utterance, historyBefore)
             }
 
-            _uiState.value = _uiState.value.copy(isProcessing = false, responseText = response)
+            _uiState.value = _uiState.value.copy(
+                isProcessing = false,
+                responseText = response,
+                transcript = _uiState.value.transcript + ChatMessage(ChatRole.ASSISTANT, response)
+            )
             speak(response)
         }
+    }
+
+    private suspend fun handleChat(utterance: String, history: List<ChatMessage>): String {
+        val recentCalls = callRepository.observeCallRecords().first().take(5)
+        val context = if (recentCalls.isEmpty()) {
+            ""
+        } else {
+            recentCalls.joinToString("\n") { record ->
+                val who = record.contactName ?: record.phoneNumber
+                val summary = record.summary?.let { ": $it" } ?: ""
+                "- $who (${record.direction})$summary"
+            }
+        }
+        return aiClient.chat(utterance, history, context)
     }
 
     private suspend fun handleCall(target: String?, contacts: List<com.aicaller.app.data.repository.Contact>): String {

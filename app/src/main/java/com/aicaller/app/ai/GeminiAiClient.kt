@@ -109,6 +109,41 @@ class GeminiAiClient @Inject constructor(
             onFallback = { fallback.parseVoiceCommand(utterance, knownContactNames) }
         )
 
+    override suspend fun chat(message: String, history: List<ChatMessage>, context: String): String =
+        withGemini(
+            block = { apiKey ->
+                val contents = mutableListOf<GeminiContent>()
+                for (turn in history) {
+                    contents.add(
+                        GeminiContent(
+                            role = if (turn.role == ChatRole.USER) "user" else "model",
+                            parts = listOf(GeminiPart(text = turn.text))
+                        )
+                    )
+                }
+                contents.add(GeminiContent(role = "user", parts = listOf(GeminiPart(text = message))))
+
+                val systemPrompt = """
+                    You are a helpful voice assistant embedded in a phone dialer app.
+                    Answer concisely (2-3 sentences max), in a friendly tone.
+                    Use the following context about the user's recent call activity if relevant:
+                    $context
+                """.trimIndent()
+
+                val response = api.generateContent(
+                    model = GeminiApi.MODEL,
+                    apiKey = apiKey,
+                    request = GeminiGenerateRequest(
+                        contents = contents,
+                        systemInstruction = GeminiContent(parts = listOf(GeminiPart(text = systemPrompt))),
+                        generationConfig = GeminiGenerationConfig(temperature = 0.5, maxOutputTokens = 300)
+                    )
+                )
+                response.text.trim().ifBlank { fallback.chat(message, history, context) }
+            },
+            onFallback = { fallback.chat(message, history, context) }
+        )
+
     private inline fun <reified T> parseJson(rawText: String): T? {
         val cleaned = rawText.trim()
             .removePrefix("```json").removePrefix("```")

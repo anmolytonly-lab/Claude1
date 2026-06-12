@@ -28,6 +28,46 @@ class SettingsViewModel @Inject constructor(
     var autoBlockHighRiskCalls by mutableStateOf(securePrefs.autoBlockHighRiskCalls)
         private set
 
+    var quietHoursEnabled by mutableStateOf(securePrefs.quietHoursEnabled)
+        private set
+
+    var quietHoursStart by mutableStateOf(securePrefs.quietHoursStart)
+        private set
+
+    var quietHoursEnd by mutableStateOf(securePrefs.quietHoursEnd)
+        private set
+
+    var quietHoursMessage by mutableStateOf(securePrefs.quietHoursMessage)
+        private set
+
+    var quietHoursSilenceUnknown by mutableStateOf(securePrefs.quietHoursSilenceUnknown)
+        private set
+
+    fun onQuietHoursEnabledChanged(enabled: Boolean) {
+        quietHoursEnabled = enabled
+        securePrefs.quietHoursEnabled = enabled
+    }
+
+    fun onQuietHoursStartChanged(hour: Int) {
+        quietHoursStart = hour
+        securePrefs.quietHoursStart = hour
+    }
+
+    fun onQuietHoursEndChanged(hour: Int) {
+        quietHoursEnd = hour
+        securePrefs.quietHoursEnd = hour
+    }
+
+    fun onQuietHoursMessageChanged(message: String) {
+        quietHoursMessage = message
+        securePrefs.quietHoursMessage = message
+    }
+
+    fun onQuietHoursSilenceUnknownChanged(enabled: Boolean) {
+        quietHoursSilenceUnknown = enabled
+        securePrefs.quietHoursSilenceUnknown = enabled
+    }
+
     fun onApiKeyChanged(value: String) {
         apiKey = value
         securePrefs.geminiApiKey = value.trim().ifBlank { null }

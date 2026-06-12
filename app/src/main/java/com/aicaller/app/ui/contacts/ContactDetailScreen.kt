@@ -8,13 +8,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +36,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun ContactDetailScreen(viewModel: ContactDetailViewModel = hiltViewModel()) {
     val insight by viewModel.insight.collectAsState()
     val callHistory by viewModel.callHistory.collectAsState()
+    val spamCheck by viewModel.spamCheck.collectAsState()
     val context = LocalContext.current
 
     Column(
@@ -39,11 +46,51 @@ fun ContactDetailScreen(viewModel: ContactDetailViewModel = hiltViewModel()) {
         Text(insight?.displayName ?: viewModel.phoneNumber, style = MaterialTheme.typography.titleLarge)
         Text(viewModel.phoneNumber, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-        Button(onClick = {
-            context.startActivity(Intent(Intent.ACTION_CALL, Uri.parse("tel:${viewModel.phoneNumber}")))
-        }) {
-            Icon(Icons.Filled.Call, contentDescription = null)
-            Text(" Call", modifier = Modifier.padding(start = 4.dp))
+        Row {
+            Button(onClick = {
+                context.startActivity(Intent(Intent.ACTION_CALL, Uri.parse("tel:${viewModel.phoneNumber}")))
+            }) {
+                Icon(Icons.Filled.Call, contentDescription = null)
+                Text(" Call", modifier = Modifier.padding(start = 4.dp))
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            OutlinedButton(onClick = { viewModel.checkNumber() }, enabled = spamCheck !is SpamCheckState.Loading) {
+                Icon(Icons.Filled.Shield, contentDescription = null)
+                Text(" Check this number", modifier = Modifier.padding(start = 4.dp))
+            }
+        }
+
+        when (val check = spamCheck) {
+            is SpamCheckState.Loading -> {
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    CircularProgressIndicator(modifier = Modifier.padding(end = 8.dp))
+                    Text("Checking number...")
+                }
+            }
+            is SpamCheckState.Result -> {
+                val result = check.result
+                val riskColor = when {
+                    result.riskScore >= 70 -> MaterialTheme.colorScheme.error
+                    result.riskScore >= 35 -> com.aicaller.app.ui.theme.GeminiAmber
+                    else -> com.aicaller.app.ui.theme.GeminiGreen
+                }
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            "${result.label} (${result.riskScore}%)",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = riskColor
+                        )
+                        Text(result.reason, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
+            SpamCheckState.Idle -> {}
         }
 
         insight?.let { i ->

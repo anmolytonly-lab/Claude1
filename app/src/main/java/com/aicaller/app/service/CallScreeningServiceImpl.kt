@@ -2,6 +2,7 @@ package com.aicaller.app.service
 
 import android.telecom.Call
 import android.telecom.CallScreeningService
+import com.aicaller.app.data.repository.ContactRepository
 import com.aicaller.app.data.repository.SpamRepository
 import com.aicaller.app.util.SecurePrefs
 import dagger.hilt.android.AndroidEntryPoint
@@ -18,30 +19,41 @@ import javax.inject.Inject
 class CallScreeningServiceImpl : CallScreeningService() {
 
     @Inject lateinit var spamRepository: SpamRepository
+    @Inject lateinit var contactRepository: ContactRepository
     @Inject lateinit var securePrefs: SecurePrefs
 
     override fun onScreenCall(callDetails: Call.Details) {
         val number = callDetails.handle?.schemeSpecificPart
 
-        if (number.isNullOrBlank() || !securePrefs.spamScreeningEnabled) {
+        if (number.isNullOrBlank()) {
             respondToCall(callDetails, allowResponse())
             return
         }
 
-        val assessment = runBlocking {
-            withTimeoutOrNull(SCREENING_TIMEOUT_MS) {
-                spamRepository.assessNumber(number, useAi = true)
+        val isQuietHours = securePrefs.isWithinQuietHours()
+
+        val assessment = if (securePrefs.spamScreeningEnabled) {
+            runBlocking {
+                withTimeoutOrNull(SCREENING_TIMEOUT_MS) {
+                    spamRepository.assessNumber(number, useAi = true)
+                }
             }
+        } else {
+            null
         }
 
         val response = when {
-            assessment == null -> allowResponse()
-            assessment.shouldBlock && securePrefs.autoBlockHighRiskCalls -> blockResponse()
-            assessment.shouldScreen -> silenceResponse()
+            assessment?.shouldBlock == true && securePrefs.autoBlockHighRiskCalls -> blockResponse()
+            assessment?.shouldScreen == true -> silenceResponse()
+            isQuietHours && isUnknownNumber(number) && securePrefs.quietHoursSilenceUnknown -> silenceResponse()
             else -> allowResponse()
         }
 
         respondToCall(callDetails, response)
+    }
+
+    private fun isUnknownNumber(number: String): Boolean = runBlocking {
+        contactRepository.lookupNameByNumber(number) == null
     }
 
     private fun allowResponse() = CallResponse.Builder()

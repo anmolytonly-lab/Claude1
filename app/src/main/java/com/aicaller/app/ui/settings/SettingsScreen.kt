@@ -117,8 +117,72 @@ fun SettingsScreen(
             }
         }
 
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text("Automation", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+
+                SettingSwitchRow(
+                    title = "Quiet hours",
+                    subtitle = "Silence calls and send a custom auto-reply during set hours",
+                    checked = viewModel.quietHoursEnabled,
+                    onCheckedChange = viewModel::onQuietHoursEnabledChanged
+                )
+
+                if (viewModel.quietHoursEnabled) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        HourPicker(
+                            label = "From",
+                            hour = viewModel.quietHoursStart,
+                            onHourChange = viewModel::onQuietHoursStartChanged
+                        )
+                        HourPicker(
+                            label = "To",
+                            hour = viewModel.quietHoursEnd,
+                            onHourChange = viewModel::onQuietHoursEndChanged
+                        )
+                    }
+
+                    SettingSwitchRow(
+                        title = "Silence unknown numbers",
+                        subtitle = "Send calls from numbers not in your contacts straight to voicemail",
+                        checked = viewModel.quietHoursSilenceUnknown,
+                        onCheckedChange = viewModel::onQuietHoursSilenceUnknownChanged
+                    )
+
+                    OutlinedTextField(
+                        value = viewModel.quietHoursMessage,
+                        onValueChange = viewModel::onQuietHoursMessageChanged,
+                        label = { Text("Quiet hours auto-reply") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
+
         OutlinedButton(onClick = onOpenSpamList, modifier = Modifier.fillMaxWidth()) {
             Text("Manage spam & blocked numbers")
+        }
+    }
+}
+
+@Composable
+private fun HourPicker(label: String, hour: Int, onHourChange: (Int) -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text("$label:", modifier = Modifier.padding(end = 8.dp))
+        OutlinedButton(onClick = { onHourChange((hour + 23) % 24) }) {
+            Text("-")
+        }
+        Text(
+            text = String.format("%02d:00", hour),
+            modifier = Modifier.padding(horizontal = 8.dp),
+            style = MaterialTheme.typography.bodyLarge
+        )
+        OutlinedButton(onClick = { onHourChange((hour + 1) % 24) }) {
+            Text("+")
         }
     }
 }

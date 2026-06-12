@@ -90,6 +90,12 @@ class CallRepository @Inject constructor(
         }
     }
 
+    /** Persists a spam risk score computed for an existing call record. */
+    suspend fun updateSpamScore(recordId: Long, spamScore: Int) {
+        val record = callRecordDao.getById(recordId) ?: return
+        callRecordDao.update(record.copy(spamScore = spamScore))
+    }
+
     /** Attaches a freshly captured transcript to a call record. */
     suspend fun saveTranscript(callRecordId: Long, transcript: String, recordingPath: String? = null) {
         val record = callRecordDao.getById(callRecordId) ?: return

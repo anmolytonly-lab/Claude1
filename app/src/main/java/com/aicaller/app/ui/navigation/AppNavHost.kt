@@ -27,6 +27,7 @@ import com.aicaller.app.ui.calldetail.CallDetailScreen
 import com.aicaller.app.ui.contacts.ContactDetailScreen
 import com.aicaller.app.ui.contacts.ContactsScreen
 import com.aicaller.app.ui.dialer.DialerScreen
+import com.aicaller.app.ui.insights.InsightsScreen
 import com.aicaller.app.ui.recents.RecentsScreen
 import com.aicaller.app.ui.settings.SettingsScreen
 import com.aicaller.app.ui.spam.SpamListScreen
@@ -87,6 +88,7 @@ fun AppNavHost() {
             composable(AppDestination.Contacts.route) {
                 ContactsScreen(onOpenContact = { number -> navController.navigate(Routes.contactDetail(number)) })
             }
+            composable(AppDestination.Insights.route) { InsightsScreen() }
             composable(AppDestination.Assistant.route) { AssistantScreen() }
             composable(AppDestination.Settings.route) {
                 SettingsScreen(onOpenSpamList = { navController.navigate(Routes.SPAM_LIST) })
@@ -112,6 +114,7 @@ private fun topBarTitle(route: String?): String = when (route) {
     AppDestination.Dialer.route -> "AI Caller"
     AppDestination.Recents.route -> "Recents"
     AppDestination.Contacts.route -> "Contacts"
+    AppDestination.Insights.route -> "Insights"
     AppDestination.Assistant.route -> "Assistant"
     AppDestination.Settings.route -> "Settings"
     Routes.SPAM_LIST -> "Spam & blocked numbers"

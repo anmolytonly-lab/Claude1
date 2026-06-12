@@ -17,4 +17,12 @@ interface AiClient {
     suspend fun generateAutoReply(context: AutoReplyContext): String
 
     suspend fun parseVoiceCommand(utterance: String, knownContactNames: List<String>): VoiceCommandResult
+
+    /**
+     * Free-form multi-turn chat used by the assistant for questions that
+     * don't map to a known [VoiceAction]. [context] supplies grounding
+     * information (e.g. recent call history) and [history] is the prior
+     * conversation turns.
+     */
+    suspend fun chat(message: String, history: List<ChatMessage>, context: String): String
 }

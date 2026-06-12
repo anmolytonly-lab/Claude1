@@ -91,16 +91,25 @@ private fun CallRecordRow(record: CallRecordEntity, onClick: () -> Unit) {
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                if (record.spamScore != null && record.spamScore >= 50) {
-                    Text(
-                        text = "Spam risk ${record.spamScore}%",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
+                RiskBadge(spamScore = record.spamScore)
             }
         }
     }
+}
+
+@Composable
+private fun RiskBadge(spamScore: Int?) {
+    if (spamScore == null) return
+    val (label, color) = when {
+        spamScore >= 70 -> "High risk $spamScore%" to MaterialTheme.colorScheme.error
+        spamScore >= 35 -> "Suspicious $spamScore%" to com.aicaller.app.ui.theme.GeminiAmber
+        else -> return
+    }
+    Text(
+        text = label,
+        style = MaterialTheme.typography.labelLarge,
+        color = color
+    )
 }
 
 @Composable

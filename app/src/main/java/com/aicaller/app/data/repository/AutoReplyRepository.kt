@@ -8,6 +8,7 @@ import com.aicaller.app.ai.LocalHeuristicAiClient
 import com.aicaller.app.data.local.dao.AutoReplyDao
 import com.aicaller.app.data.local.entities.AutoReplyEntity
 import com.aicaller.app.util.PhoneNumberUtils
+import com.aicaller.app.util.SecurePrefs
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
@@ -19,7 +20,8 @@ class AutoReplyRepository @Inject constructor(
     private val autoReplyDao: AutoReplyDao,
     private val aiClient: AiClient,
     private val contactRepository: ContactRepository,
-    private val spamRepository: SpamRepository
+    private val spamRepository: SpamRepository,
+    private val securePrefs: SecurePrefs
 ) {
 
     fun observeHistory(): Flow<List<AutoReplyEntity>> = autoReplyDao.observeAll()
@@ -34,16 +36,20 @@ class AutoReplyRepository @Inject constructor(
         val callerName = insight?.displayName ?: contactRepository.lookupNameByNumber(normalized)
         val spamAssessment = spamRepository.assessNumber(normalized, useAi = false)
 
-        val message = aiClient.generateAutoReply(
-            AutoReplyContext(
-                callerNumber = normalized,
-                callerName = callerName,
-                relationship = insight?.relationship,
-                timeOfDay = LocalHeuristicAiClient.timeOfDayLabel(),
-                isLikelySpam = spamAssessment.shouldScreen,
-                recentSummary = insight?.lastSummary
+        val message = if (securePrefs.isWithinQuietHours()) {
+            securePrefs.quietHoursMessage
+        } else {
+            aiClient.generateAutoReply(
+                AutoReplyContext(
+                    callerNumber = normalized,
+                    callerName = callerName,
+                    relationship = insight?.relationship,
+                    timeOfDay = LocalHeuristicAiClient.timeOfDayLabel(),
+                    isLikelySpam = spamAssessment.shouldScreen,
+                    recentSummary = insight?.lastSummary
+                )
             )
-        )
+        }
 
         val smsManager = context.getSystemService(SmsManager::class.java)
         smsManager.sendTextMessage(normalized, null, message, null, null)
