@@ -16,6 +16,14 @@ class SettingsViewModel @Inject constructor(
     var apiKey by mutableStateOf(securePrefs.geminiApiKey ?: "")
         private set
 
+    var aiModel by mutableStateOf(securePrefs.aiModel)
+        private set
+
+    fun onAiModelChanged(model: String) {
+        aiModel = model
+        securePrefs.aiModel = model
+    }
+
     var spamScreeningEnabled by mutableStateOf(securePrefs.spamScreeningEnabled)
         private set
 

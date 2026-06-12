@@ -41,11 +41,17 @@ class SpamRepository @Inject constructor(
         val heuristic = SpamHeuristics.score(normalized)
         if (!useAi) return heuristic
 
-        val recentTranscript = callRecordDao.recentForNumber(normalized, limit = 1)
-            .firstOrNull()?.transcript?.take(280)
+        val history = callRecordDao.recentForNumber(normalized, limit = 5)
+        val recentTranscript = history.firstOrNull()?.transcript?.take(280)
+        val context = buildString {
+            if (history.isNotEmpty()) {
+                append("This number has called ${history.size} time(s) before. ")
+            }
+            recentTranscript?.let { append("Recent call transcript snippet: \"$it\".") }
+        }.trim().ifBlank { null }
 
         val result = if (heuristic.riskScore in 1..99) {
-            aiClient.analyzeSpamRisk(normalized, recentTranscript)
+            aiClient.analyzeSpamRisk(normalized, context)
         } else {
             heuristic
         }

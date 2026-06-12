@@ -30,6 +30,12 @@ class SecurePrefs @Inject constructor(@ApplicationContext context: Context) {
         get() = prefs.getString(KEY_GEMINI_API_KEY, null)
         set(value) = prefs.edit().putString(KEY_GEMINI_API_KEY, value).apply()
 
+    /** Which Gemini model to use for AI requests. See [com.aicaller.app.ai.GeminiModelOptions] for the available options. */
+    var aiModel: String
+        get() = prefs.getString(KEY_AI_MODEL, com.aicaller.app.ai.GeminiModelOptions.DEFAULT)
+            ?: com.aicaller.app.ai.GeminiModelOptions.DEFAULT
+        set(value) = prefs.edit().putString(KEY_AI_MODEL, value).apply()
+
     var spamScreeningEnabled: Boolean
         get() = prefs.getBoolean(KEY_SPAM_SCREENING, true)
         set(value) = prefs.edit().putBoolean(KEY_SPAM_SCREENING, value).apply()
@@ -87,6 +93,7 @@ class SecurePrefs @Inject constructor(@ApplicationContext context: Context) {
 
     companion object {
         private const val KEY_GEMINI_API_KEY = "gemini_api_key"
+        private const val KEY_AI_MODEL = "ai_model"
         private const val KEY_SPAM_SCREENING = "feature_spam_screening"
         private const val KEY_TRANSCRIPTION = "feature_transcription"
         private const val KEY_AUTO_REPLY = "feature_auto_reply"
