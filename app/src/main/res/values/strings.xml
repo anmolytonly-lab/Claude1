@@ -1,0 +1,46 @@
+<resources>
+    <string name="app_name">Kawach</string>
+    <string name="app_name_discreet">Notes</string>
+
+    <!-- Home -->
+    <string name="sos_hold_hint">2 सेकंड दबाएं — SOS भेजें</string>
+    <string name="sos_activated">SOS सक्रिय!</string>
+    <string name="sos_sending">मदद भेजी जा रही है…</string>
+    <string name="cancel">रद्द करें</string>
+    <string name="share_location">Location Share करें</string>
+    <string name="fake_call">Fake Call</string>
+    <string name="walking_timer">Walking Timer</string>
+
+    <!-- Contacts -->
+    <string name="emergency_contacts">Emergency Contacts</string>
+    <string name="neighbourhood_group">Neighbourhood Group</string>
+    <string name="add_contact">Contact जोड़ें</string>
+    <string name="no_contacts_warning">कोई contact नहीं! SOS काम नहीं करेगा।</string>
+
+    <!-- Log -->
+    <string name="incident_log">Incident Log</string>
+    <string name="add_entry">नई Entry</string>
+    <string name="description_hint">क्या हुआ? (संक्षेप में लिखें)</string>
+    <string name="export_log">Log Export करें</string>
+
+    <!-- Safety Info -->
+    <string name="safety_tips">Safety Tips</string>
+    <string name="helplines">Helpline Numbers</string>
+
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="shake_to_sos">Shake-to-SOS</string>
+    <string name="shake_to_sos_desc">फोन हिलाने पर SOS शुरू हो जाएगा</string>
+    <string name="discreet_mode">Discreet Mode</string>
+    <string name="discreet_mode_desc">App का नाम और icon बदल दें</string>
+
+    <!-- Notifications -->
+    <string name="channel_walking_timer">Walking Timer</string>
+    <string name="notif_walking_title">Walking Timer चल रहा है</string>
+    <string name="notif_im_safe">मैं Safe हूँ — Cancel</string>
+    <string name="notif_channel_sos">SOS Alert</string>
+
+    <!-- SMS -->
+    <string name="sms_sos_template">EMERGENCY! मुझे मदद चाहिए! My location: %s</string>
+    <string name="community_alert_template">Safety Alert: कृपया सावधान रहें और alert रहें।</string>
+</resources>

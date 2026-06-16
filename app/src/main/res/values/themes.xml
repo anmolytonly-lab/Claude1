@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Kawach" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Used by FakeCallActivity to fill the entire screen incl. status bar -->
+    <style name="Theme.Kawach.FullScreen" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
+    </style>
+</resources>

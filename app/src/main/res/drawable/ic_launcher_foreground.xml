@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simple shield/armor foreground for Kawach launcher icon -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,18 L78,28 L78,52 Q78,68 54,82 Q30,68 30,52 L30,28 Z" />
+    <path
+        android:fillColor="#00607A"
+        android:pathData="M54,32 L70,39 L70,52 Q70,62 54,72 Q38,62 38,52 L38,39 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M49,50 L44,45 L41,48 L49,56 L67,38 L64,35 Z" />
+</vector>
