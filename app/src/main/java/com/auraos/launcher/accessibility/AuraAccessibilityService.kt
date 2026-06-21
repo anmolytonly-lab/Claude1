@@ -31,10 +31,4 @@ class AuraAccessibilityService : AccessibilityService() {
         }
         return super.onKeyEvent(event)
     }
-
-    override fun getServiceInfo(): android.accessibilityservice.AccessibilityServiceInfo {
-        return super.getServiceInfo().apply {
-            flags = flags or android.accessibilityservice.AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS
-        }
-    }
 }
