@@ -1,4 +1,4 @@
-package com.novashell.launcher.ui.theme
+package com.auraos.launcher.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -28,11 +28,10 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun NovaShellTheme(
+fun AuraOsTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    // Use Material You dynamic colors on Android 12+ for wallpaper-based theming
     val colorScheme = when {
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current

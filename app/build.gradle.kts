@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.novashell.launcher"
+    namespace = "com.auraos.launcher"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.novashell.launcher"
+        applicationId = "com.auraos.launcher"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

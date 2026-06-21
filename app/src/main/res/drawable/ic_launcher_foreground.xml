@@ -4,8 +4,8 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Simple "N" letterform for Nova Shell -->
+    <!-- "A" letterform for Aura OS -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M36,72V36h6l24,28V36h6v36h-6L42,44v28z" />
+        android:pathData="M54,32L36,76h8l3,-10h14l3,10h8L54,32zM49,60l5,-16l5,16z" />
 </vector>

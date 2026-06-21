@@ -1,9 +1,8 @@
-package com.novashell.launcher.ui
+package com.auraos.launcher.ui
 
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Drawable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,8 +34,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.novashell.launcher.AppInfo
-import com.novashell.launcher.LauncherViewModel
+import com.auraos.launcher.AppInfo
+import com.auraos.launcher.LauncherViewModel
 
 @Composable
 fun HomeScreen(viewModel: LauncherViewModel = viewModel()) {
@@ -49,7 +48,7 @@ fun HomeScreen(viewModel: LauncherViewModel = viewModel()) {
             .statusBarsPadding()
     ) {
         Text(
-            text = "Nova Shell",
+            text = "Aura OS",
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)

@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "NovaShell"
+rootProject.name = "AuraOS"
 include(":app")

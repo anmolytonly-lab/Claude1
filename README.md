@@ -1,6 +1,6 @@
-# Nova Shell — Custom Android Launcher
+# Aura OS — Custom Android Launcher
 
-A native Android launcher app built with Kotlin and Jetpack Compose. Nova Shell replaces your device home screen with a custom, deeply themeable experience — with an integrated AI assistant coming in later phases.
+A native Android launcher app built with Kotlin and Jetpack Compose. Aura OS replaces your device home screen with a custom, deeply themeable experience — with an integrated AI assistant (**Aura**) coming in later phases.
 
 ## Phase 1 — Minimal Working Launcher
 
@@ -8,7 +8,7 @@ This initial version:
 - Registers as a HOME app (appears in the launcher chooser)
 - Lists all installed apps alphabetically using the `LauncherApps` API
 - Tapping an app launches it
-- Pressing Home returns to Nova Shell
+- Pressing Home returns to Aura OS
 - Back button is consumed (standard launcher behavior)
 
 ## Building
@@ -22,11 +22,11 @@ This initial version:
 
 ### On the emulator / device:
 1. Press the Home button after installing.
-2. Android will show a picker — select **Nova Shell** and choose **Always**.
+2. Android will show a picker — select **Aura OS** and choose **Always**.
 
 ### If you already have a default launcher set:
 1. Go to **Settings → Apps → Default Apps → Home app**.
-2. Select **Nova Shell**.
+2. Select **Aura OS**.
 
 ### To revert:
 1. Go to **Settings → Apps → Default Apps → Home app**.
@@ -35,7 +35,7 @@ This initial version:
 ## Project Structure
 
 ```
-app/src/main/java/com/novashell/launcher/
+app/src/main/java/com/auraos/launcher/
 ├── MainActivity.kt          — Entry point, edge-to-edge, Compose host
 ├── AppInfo.kt                — Data class for installed app metadata
 ├── AppsRepository.kt         — Queries installed apps via LauncherApps API
@@ -48,7 +48,7 @@ app/src/main/java/com/novashell/launcher/
 
 ## Security Note
 
-The Gemini API key (needed in later phases) must be stored in `local.properties` and referenced via `BuildConfig`. Never commit API keys to version control.
+The Gemini API key (needed for the Aura AI assistant in later phases) must be stored in `local.properties` and referenced via `BuildConfig`. Never commit API keys to version control.
 
 ## Tech Stack
 

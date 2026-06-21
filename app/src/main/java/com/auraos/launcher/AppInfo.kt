@@ -1,4 +1,4 @@
-package com.novashell.launcher
+package com.auraos.launcher
 
 import android.content.ComponentName
 import android.graphics.drawable.Drawable

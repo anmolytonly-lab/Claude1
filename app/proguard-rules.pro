@@ -1,3 +1,3 @@
-# Default ProGuard rules for Nova Shell launcher
+# Default ProGuard rules for Aura OS launcher
 -keepattributes *Annotation*
--keep class com.novashell.launcher.** { *; }
+-keep class com.auraos.launcher.** { *; }
