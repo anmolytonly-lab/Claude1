@@ -6,12 +6,14 @@ import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -35,37 +37,64 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.auraos.launcher.AppInfo
+import com.auraos.launcher.AuraViewModel
 import com.auraos.launcher.LauncherViewModel
+import com.auraos.launcher.ui.assistant.AuraPanelOverlay
+import com.auraos.launcher.ui.assistant.FloatingAuraButton
 
 @Composable
-fun HomeScreen(viewModel: LauncherViewModel = viewModel()) {
-    val apps by viewModel.apps.collectAsState()
+fun HomeScreen(
+    launcherViewModel: LauncherViewModel = viewModel(),
+    auraViewModel: AuraViewModel = viewModel()
+) {
+    val apps by launcherViewModel.apps.collectAsState()
+    val assistantState by auraViewModel.assistantState.collectAsState()
     val context = LocalContext.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-    ) {
-        Text(
-            text = "Aura OS",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
-        )
-
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Main launcher content
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
         ) {
-            items(items = apps, key = { it.componentName.flattenToString() }) { app ->
-                AppListItem(
-                    app = app,
-                    onClick = { launchApp(context, app.componentName) }
-                )
+            Text(
+                text = "Aura OS",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+            )
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                items(items = apps, key = { it.componentName.flattenToString() }) { app ->
+                    AppListItem(
+                        app = app,
+                        onClick = { launchApp(context, app.componentName) }
+                    )
+                }
             }
         }
+
+        // Floating Aura button (bottom-right)
+        if (assistantState == com.auraos.launcher.AssistantState.HIDDEN) {
+            FloatingAuraButton(
+                onClick = { auraViewModel.showAssistant() },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 20.dp, bottom = 32.dp)
+                    .navigationBarsPadding()
+            )
+        }
+
+        // Aura AI panel overlay
+        AuraPanelOverlay(
+            viewModel = auraViewModel,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 
