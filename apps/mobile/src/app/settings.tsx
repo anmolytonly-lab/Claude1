@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -21,23 +20,8 @@ export default function SettingsScreen() {
   const profile = useSessionStore((s) => s.profile);
   const setTheme = useSessionStore((s) => s.setTheme);
   const updateDisplayName = useSessionStore((s) => s.updateDisplayName);
-  const signOut = useSessionStore((s) => s.signOut);
 
   const [displayName, setDisplayName] = useState(profile?.displayName ?? '');
-
-  const confirmSignOut = () => {
-    Alert.alert('Sign out', 'You can sign back in any time.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign out',
-        style: 'destructive',
-        onPress: async () => {
-          await signOut();
-          router.replace('/(auth)/sign-in');
-        },
-      },
-    ]);
-  };
 
   return (
     <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
@@ -49,13 +33,10 @@ export default function SettingsScreen() {
           value={displayName}
           onChangeText={setDisplayName}
           onBlur={() => displayName.trim() && updateDisplayName(displayName.trim())}
-          placeholder="Display name"
+          placeholder="Your name"
           placeholderTextColor={theme.textSecondary}
           style={[styles.input, { color: theme.text, borderColor: theme.border }]}
         />
-        <ThemedText type="small" themeColor="textSecondary">
-          {profile?.email}
-        </ThemedText>
       </ThemedView>
 
       <ThemedView type="backgroundElement" style={styles.section}>
@@ -88,16 +69,11 @@ export default function SettingsScreen() {
           ABOUT
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          Nova is running in local/mock mode — chat, tasks, notes, and calendar are stored on this
-          device only. Connect a real Supabase project and Gemini API key to switch to live sync.
+          Nova is a personal, single-user app running in local/mock mode — chat, tasks, notes, and
+          calendar are stored on this device only. Connect a real Supabase project and Gemini API key
+          to switch to live sync.
         </ThemedText>
       </ThemedView>
-
-      <Pressable onPress={confirmSignOut} style={[styles.signOutButton, { borderColor: theme.danger }]}>
-        <ThemedText themeColor="danger" type="smallBold">
-          Sign out
-        </ThemedText>
-      </Pressable>
     </ScrollView>
   );
 }
@@ -121,12 +97,5 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     borderRadius: Spacing.five,
     borderWidth: StyleSheet.hairlineWidth,
-  },
-  signOutButton: {
-    marginTop: Spacing.two,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.three,
-    alignItems: 'center',
   },
 });

@@ -39,19 +39,14 @@ function AppNavigator() {
   return (
     <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Protected guard={status === 'signed-in'}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="chat/[id]" options={{ title: 'Chat' }} />
-          <Stack.Screen name="notes/[id]" options={{ title: 'Note' }} />
-          <Stack.Screen name="settings" options={{ title: 'Settings' }} />
-          <Stack.Screen name="memory" options={{ title: 'Memory' }} />
-          <Stack.Screen name="agent" options={{ title: 'Agent' }} />
-          <Stack.Screen name="voice" options={{ title: 'Voice' }} />
-          <Stack.Screen name="organizations" options={{ title: 'Organizations' }} />
-        </Stack.Protected>
-        <Stack.Protected guard={status === 'signed-out'}>
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        </Stack.Protected>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="chat/[id]" options={{ title: 'Chat' }} />
+        <Stack.Screen name="notes/[id]" options={{ title: 'Note' }} />
+        <Stack.Screen name="settings" options={{ title: 'Settings' }} />
+        <Stack.Screen name="memory" options={{ title: 'Memory' }} />
+        <Stack.Screen name="agent" options={{ title: 'Agent' }} />
+        <Stack.Screen name="voice" options={{ title: 'Voice' }} />
+        <Stack.Screen name="organizations" options={{ title: 'Organizations' }} />
       </Stack>
     </ThemeProvider>
   );

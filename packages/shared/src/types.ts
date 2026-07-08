@@ -6,7 +6,6 @@ export type ThemePreference = "light" | "dark" | "system";
 
 export interface Profile {
   id: string;
-  email: string;
   displayName: string;
   avatarUrl?: string;
   themePreference: ThemePreference;

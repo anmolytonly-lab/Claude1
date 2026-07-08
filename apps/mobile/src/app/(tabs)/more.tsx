@@ -22,7 +22,7 @@ const ROWS: Row[] = [
   { icon: 'flash', title: 'Agent', subtitle: 'Give Nova a goal to work on', href: '/agent' },
   { icon: 'mic', title: 'Voice', subtitle: 'Push-to-talk with Nova', href: '/voice' },
   { icon: 'business', title: 'Organizations', subtitle: 'Personal workspace', href: '/organizations' },
-  { icon: 'settings', title: 'Settings', subtitle: 'Profile, theme, sign out', href: '/settings' },
+  { icon: 'settings', title: 'Settings', subtitle: 'Profile and theme', href: '/settings' },
 ];
 
 export default function MoreScreen() {
@@ -41,7 +41,7 @@ export default function MoreScreen() {
         <View>
           <ThemedText type="smallBold">{profile?.displayName}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            {profile?.email}
+            Personal workspace
           </ThemedText>
         </View>
       </View>

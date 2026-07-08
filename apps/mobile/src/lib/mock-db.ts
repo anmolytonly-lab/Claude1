@@ -18,14 +18,8 @@ import { readJSON, writeJSON } from '@/lib/storage';
 // API call would have (async, returns plain data) so the UI layer doesn't
 // need to change when this is swapped for live calls.
 
-interface Account {
-  email: string;
-  password: string;
-  profile: Profile;
-}
-
 interface DbShape {
-  accounts: Account[];
+  profile: Profile;
   organizations: Organization[];
   conversations: Conversation[];
   messagesByConversation: Record<string, Message[]>;
@@ -46,7 +40,13 @@ function seedDb(): DbShape {
   const conversationId = generateId('conv');
 
   return {
-    accounts: [],
+    profile: {
+      id: generateId('user'),
+      displayName: 'You',
+      themePreference: 'system',
+      activeOrganizationId: orgId,
+      createdAt: now(),
+    },
     organizations: [
       { id: orgId, name: 'Personal', isPersonal: true, role: 'owner', createdAt: now() },
     ],
@@ -123,46 +123,27 @@ export async function hydrateDb(): Promise<DbShape> {
   return hydrating;
 }
 
-function requireDb(): DbShape {
-  if (!db) throw new Error('mock-db not hydrated yet — call hydrateDb() first');
-  return db;
-}
-
 const NETWORK_DELAY_MS = 250;
 
 function delay<T>(value: T): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), NETWORK_DELAY_MS));
 }
 
-// --- Accounts / auth -------------------------------------------------------
+// --- Profile ------------------------------------------------------------
+// Personal-use build: there is exactly one profile, auto-created on first
+// launch. No login/accounts system - see the master build prompt's
+// personal-use scope principle.
 
-export async function findAccountByEmail(email: string): Promise<Account | undefined> {
-  await hydrateDb();
-  return requireDb().accounts.find((a) => a.email.toLowerCase() === email.toLowerCase());
+export async function getProfile(): Promise<Profile> {
+  const state = await hydrateDb();
+  return delay(state.profile);
 }
 
-export async function createAccount(email: string, password: string, displayName: string): Promise<Profile> {
+export async function updateProfile(patch: Partial<Profile>): Promise<Profile> {
   const state = await hydrateDb();
-  const profile: Profile = {
-    id: generateId('user'),
-    email,
-    displayName,
-    themePreference: 'system',
-    activeOrganizationId: state.organizations[0].id,
-    createdAt: now(),
-  };
-  state.accounts.push({ email, password, profile });
+  state.profile = { ...state.profile, ...patch };
   await persist();
-  return delay(profile);
-}
-
-export async function updateProfile(userId: string, patch: Partial<Profile>): Promise<Profile> {
-  const state = await hydrateDb();
-  const account = state.accounts.find((a) => a.profile.id === userId);
-  if (!account) throw new Error('Account not found');
-  account.profile = { ...account.profile, ...patch };
-  await persist();
-  return delay(account.profile);
+  return delay(state.profile);
 }
 
 // --- Organizations ----------------------------------------------------------
