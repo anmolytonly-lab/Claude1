@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { isGeminiConfigured } from '@/lib/gemini';
 import { useSessionStore } from '@/lib/session-store';
 import type { ThemePreference } from '@nova/shared';
 
@@ -69,9 +70,9 @@ export default function SettingsScreen() {
           ABOUT
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
-          Nova is a personal, single-user app running in local/mock mode — chat, tasks, notes, and
-          calendar are stored on this device only. Connect a real Supabase project and Gemini API key
-          to switch to live sync.
+          Nova is a personal, single-user app. Tasks, notes, and calendar are stored on this device
+          only. Chat replies come from{' '}
+          {isGeminiConfigured() ? 'Gemini, live.' : 'a local canned simulation (no Gemini key configured).'}
         </ThemedText>
       </ThemedView>
     </ScrollView>

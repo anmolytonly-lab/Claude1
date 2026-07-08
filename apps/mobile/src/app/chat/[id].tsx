@@ -70,6 +70,7 @@ export default function ChatThreadScreen() {
     setDraft('');
 
     const userMessage = await appendMessage(id, { role: 'user', content });
+    const historyForReply = [...messages, userMessage];
     setMessages((prev) => [...prev, userMessage]);
     scrollToEnd();
 
@@ -86,7 +87,7 @@ export default function ChatThreadScreen() {
     setMessages((prev) => [...prev, pendingMessage]);
 
     streamAssistantReply(
-      content,
+      historyForReply,
       (chunk) => {
         setMessages((prev) =>
           prev.map((m) => (m.id === pendingId ? { ...m, content: m.content + chunk } : m))

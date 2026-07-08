@@ -1,9 +1,9 @@
-// Simulated AI reply generator. Stands in for the real Gemini-backed SSE
-// stream from apps/server (see master build prompt Phase 1/2). Swap
-// `streamAssistantReply` for a real fetch-based SSE reader once a live
-// backend + API key are wired up — callers only depend on the token
-// callback shape below, not on how the tokens are produced.
+import type { Message } from '@nova/shared';
 
+import { isGeminiConfigured, streamGeminiReply } from '@/lib/gemini';
+
+// Falls back to a canned local simulation when no Gemini key is configured,
+// so the chat UI still works end-to-end on a fresh clone of this repo.
 const CANNED_REPLIES = [
   "Here's a quick answer based on what you shared. Once Nova is connected to a real model, this reply will come from Gemini instead of a canned script.",
   "Got it — I've noted that down. This is a simulated response so you can see the chat UI working end-to-end before live AI is wired in.",
@@ -28,7 +28,7 @@ export interface StreamHandle {
   cancel: () => void;
 }
 
-export function streamAssistantReply(
+function mockStreamReply(
   prompt: string,
   onToken: (chunk: string) => void,
   onDone: (fullText: string) => void
@@ -57,4 +57,39 @@ export function streamAssistantReply(
       cancelled = true;
     },
   };
+}
+
+// `history` should include the just-sent user message as its last entry -
+// Gemini uses the full conversation for context, not just the latest turn.
+export function streamAssistantReply(
+  history: Message[],
+  onToken: (chunk: string) => void,
+  onDone: (fullText: string) => void
+): StreamHandle {
+  if (isGeminiConfigured()) {
+    let cancelled = false;
+    streamGeminiReply(
+      history,
+      (chunk) => {
+        if (!cancelled) onToken(chunk);
+      },
+      (fullText) => {
+        if (!cancelled) onDone(fullText);
+      },
+      (errorMessage) => {
+        // Surfaced as the reply itself rather than thrown, so the chat
+        // thread always ends in a readable state instead of a stuck
+        // "thinking" bubble.
+        if (!cancelled) onDone(`⚠️ Couldn't reach Gemini: ${errorMessage}`);
+      }
+    );
+    return {
+      cancel: () => {
+        cancelled = true;
+      },
+    };
+  }
+
+  const lastUserMessage = [...history].reverse().find((m) => m.role === 'user');
+  return mockStreamReply(lastUserMessage?.content ?? '', onToken, onDone);
 }
