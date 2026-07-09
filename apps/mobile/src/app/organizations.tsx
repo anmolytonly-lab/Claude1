@@ -1,16 +1,20 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { GlassCard } from '@/components/glass-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { useGradients, useTheme } from '@/hooks/use-theme';
 import { listOrganizations } from '@/lib/mock-db';
 import { useSessionStore } from '@/lib/session-store';
 
 export default function OrganizationsScreen() {
   const theme = useTheme();
+  const gradients = useGradients();
   const profile = useSessionStore((s) => s.profile);
   const { data: organizations = [] } = useQuery({ queryKey: ['organizations'], queryFn: listOrganizations });
 
@@ -28,21 +32,23 @@ export default function OrganizationsScreen() {
       </ThemedText>
 
       <View style={styles.list}>
-        {organizations.map((org) => {
+        {organizations.map((org, index) => {
           const active = org.id === profile?.activeOrganizationId;
           return (
-            <View
-              key={org.id}
-              style={[styles.row, { borderColor: theme.border, backgroundColor: theme.backgroundElement }]}>
-              <Ionicons name={org.isPersonal ? 'person' : 'business'} size={20} color={theme.primary} />
-              <View style={styles.rowText}>
-                <ThemedText type="smallBold">{org.name}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {org.role}
-                </ThemedText>
-              </View>
-              {active && <Ionicons name="checkmark-circle" size={20} color={theme.success} />}
-            </View>
+            <Animated.View key={org.id} entering={FadeInDown.delay(index * 60).duration(280)}>
+              <GlassCard style={styles.row} radius={Radius.large}>
+                <LinearGradient colors={gradients.primary} style={styles.orgIcon}>
+                  <Ionicons name={org.isPersonal ? 'person' : 'business'} size={18} color={theme.primaryText} />
+                </LinearGradient>
+                <View style={styles.rowText}>
+                  <ThemedText type="smallBold">{org.name}</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {org.role}
+                  </ThemedText>
+                </View>
+                {active && <Ionicons name="checkmark-circle" size={20} color={theme.success} />}
+              </GlassCard>
+            </Animated.View>
           );
         })}
       </View>
@@ -63,9 +69,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-    borderRadius: Spacing.three,
-    borderWidth: StyleSheet.hairlineWidth,
     padding: Spacing.three,
+  },
+  orgIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.medium,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   rowText: { flex: 1, gap: 2 },
   createButton: {
@@ -74,7 +85,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.one,
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.medium,
     paddingVertical: Spacing.three,
   },
 });

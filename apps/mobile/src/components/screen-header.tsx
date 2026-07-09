@@ -1,32 +1,51 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AnimatedPressable } from '@/components/animated-pressable';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Radius, Spacing, cardShadow } from '@/constants/theme';
+import { useGradients, useTheme } from '@/hooks/use-theme';
 
 interface ScreenHeaderProps {
   title: string;
+  subtitle?: string;
   onAddPress?: () => void;
   addLabel?: string;
 }
 
-export function ScreenHeader({ title, onAddPress, addLabel }: ScreenHeaderProps) {
+export function ScreenHeader({ title, subtitle, onAddPress, addLabel }: ScreenHeaderProps) {
   const theme = useTheme();
+  const gradients = useGradients();
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + Spacing.two, borderColor: theme.border }]}>
-      <ThemedText type="subtitle">{title}</ThemedText>
+      <View style={styles.titleBlock}>
+        <ThemedText type="title" style={styles.title}>
+          {title}
+        </ThemedText>
+        {subtitle && (
+          <ThemedText type="small" themeColor="textSecondary">
+            {subtitle}
+          </ThemedText>
+        )}
+      </View>
       {onAddPress && (
-        <Pressable
+        <AnimatedPressable
           onPress={onAddPress}
           hitSlop={12}
-          style={[styles.addButton, { backgroundColor: theme.primary }]}
+          style={[styles.addButton, cardShadow(theme.shadowColor, 0.3)]}
           accessibilityLabel={addLabel ?? `Add to ${title}`}>
-          <Ionicons name="add" size={20} color={theme.primaryText} />
-        </Pressable>
+          <LinearGradient
+            colors={gradients.primary}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.addButtonGradient}>
+            <Ionicons name="add" size={22} color={theme.primaryText} />
+          </LinearGradient>
+        </AnimatedPressable>
       )}
     </View>
   );
@@ -35,16 +54,19 @@ export function ScreenHeader({ title, onAddPress, addLabel }: ScreenHeaderProps)
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.four,
     paddingBottom: Spacing.three,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  addButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+  titleBlock: { gap: 2, flexShrink: 1 },
+  title: { fontSize: 32, lineHeight: 36 },
+  addButton: { borderRadius: Radius.pill },
+  addButtonGradient: {
+    width: 40,
+    height: 40,
+    borderRadius: Radius.pill,
     alignItems: 'center',
     justifyContent: 'center',
   },

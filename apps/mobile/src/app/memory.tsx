@@ -1,11 +1,15 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import dayjs from 'dayjs';
-import { FlatList, StyleSheet, View } from 'react-native';
+import { FlatList, StyleSheet } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { EmptyState } from '@/components/empty-state';
+import { GlassCard } from '@/components/glass-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { listMemories } from '@/lib/mock-db';
 import type { MemoryItem } from '@nova/shared';
 
@@ -26,21 +30,27 @@ export default function MemoryScreen() {
           data={memories}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => <MemoryRow memory={item} />}
+          renderItem={({ item, index }) => <MemoryRow memory={item} index={index} />}
         />
       )}
     </ThemedView>
   );
 }
 
-function MemoryRow({ memory }: { memory: MemoryItem }) {
+function MemoryRow({ memory, index }: { memory: MemoryItem; index: number }) {
+  const theme = useTheme();
   return (
-    <View style={styles.row}>
-      <ThemedText type="small">{memory.summary}</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        {dayjs(memory.createdAt).format('MMM D, YYYY')}
-      </ThemedText>
-    </View>
+    <Animated.View entering={FadeInDown.delay(index * 40).duration(280)}>
+      <GlassCard style={styles.row} radius={Radius.large}>
+        <Ionicons name="sparkles" size={16} color={theme.primary} />
+        <ThemedText type="small" style={{ flex: 1 }}>
+          {memory.summary}
+        </ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {dayjs(memory.createdAt).format('MMM D')}
+        </ThemedText>
+      </GlassCard>
+    </Animated.View>
   );
 }
 
@@ -48,5 +58,5 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   intro: { padding: Spacing.four, paddingBottom: Spacing.two },
   list: { padding: Spacing.three, gap: Spacing.two },
-  row: { gap: 4, paddingHorizontal: Spacing.two, paddingVertical: Spacing.two },
+  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, padding: Spacing.three },
 });

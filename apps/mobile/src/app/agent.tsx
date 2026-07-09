@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 
+import { GlassCard } from '@/components/glass-card';
+import { GradientButton } from '@/components/gradient-button';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import type { AgentStep } from '@nova/shared';
 
@@ -58,7 +60,7 @@ export default function AgentScreen() {
         isn't wired up yet.
       </ThemedText>
 
-      <ThemedView type="backgroundElement" style={styles.goalCard}>
+      <GlassCard style={styles.goalCard} radius={Radius.large}>
         <TextInput
           value={goal}
           onChangeText={setGoal}
@@ -67,35 +69,35 @@ export default function AgentScreen() {
           style={[styles.input, { color: theme.text, borderColor: theme.border }]}
           multiline
         />
-        <Pressable
+        <GradientButton
+          label={running ? 'Running…' : 'Run goal'}
           onPress={runGoal}
-          disabled={!goal.trim() || running}
-          style={[styles.runButton, { backgroundColor: theme.primary, opacity: !goal.trim() || running ? 0.6 : 1 }]}>
-          {running ? <ActivityIndicator color={theme.primaryText} /> : <Ionicons name="play" size={16} color={theme.primaryText} />}
-          <ThemedText themeColor="primaryText" type="smallBold">
-            {running ? 'Running…' : 'Run goal'}
-          </ThemedText>
-        </Pressable>
-      </ThemedView>
+          disabled={!goal.trim()}
+          loading={running}
+          icon={!running ? <Ionicons name="play" size={16} color={theme.primaryText} /> : undefined}
+        />
+      </GlassCard>
 
       {plan && (
-        <View style={styles.timeline}>
-          {steps.map((step) => (
-            <View key={step.id} style={styles.stepRow}>
+        <GlassCard style={styles.timeline} radius={Radius.large}>
+          {steps.map((step, index) => (
+            <Animated.View key={step.id} entering={FadeInDown.delay(index * 60).duration(250)} style={styles.stepRow}>
               <StepIcon status={step.status} />
               <ThemedText type="small" style={step.status === 'success' ? styles.stepDone : undefined}>
                 {step.summary}
               </ThemedText>
-            </View>
+            </Animated.View>
           ))}
-        </View>
+        </GlassCard>
       )}
 
       {finalResult && (
-        <ThemedView type="backgroundElement" style={styles.resultCard}>
-          <ThemedText type="smallBold">Result</ThemedText>
-          <ThemedText type="small">{finalResult}</ThemedText>
-        </ThemedView>
+        <Animated.View entering={FadeIn.duration(300)}>
+          <GlassCard style={styles.resultCard} radius={Radius.large}>
+            <ThemedText type="smallBold">Result</ThemedText>
+            <ThemedText type="small">{finalResult}</ThemedText>
+          </GlassCard>
+        </Animated.View>
       )}
     </ScrollView>
   );
@@ -110,25 +112,17 @@ function StepIcon({ status }: { status: AgentStep['status'] }) {
 
 const styles = StyleSheet.create({
   container: { padding: Spacing.four, gap: Spacing.three },
-  goalCard: { borderRadius: Spacing.three, padding: Spacing.three, gap: Spacing.three },
+  goalCard: { padding: Spacing.three, gap: Spacing.three },
   input: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.medium,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     fontSize: 16,
     minHeight: 60,
   },
-  runButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.one,
-    borderRadius: Spacing.two,
-    paddingVertical: Spacing.two + 2,
-  },
-  timeline: { gap: Spacing.two },
+  timeline: { padding: Spacing.three, gap: Spacing.three },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   stepDone: { opacity: 0.7 },
-  resultCard: { borderRadius: Spacing.three, padding: Spacing.three, gap: Spacing.one },
+  resultCard: { padding: Spacing.three, gap: Spacing.one },
 });

@@ -3,7 +3,7 @@
  * https://docs.expo.dev/guides/color-schemes/
  */
 
-import { Colors } from '@/constants/theme';
+import { Colors, Gradients } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useSessionStore } from '@/lib/session-store';
 
@@ -19,4 +19,9 @@ export function useActiveScheme(): 'light' | 'dark' {
 export function useTheme() {
   const scheme = useActiveScheme();
   return Colors[scheme];
+}
+
+export function useGradients() {
+  const scheme = useActiveScheme();
+  return Gradients[scheme];
 }

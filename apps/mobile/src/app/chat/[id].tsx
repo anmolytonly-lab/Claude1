@@ -1,22 +1,25 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   TextInput,
   View,
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 
+import { AnimatedPressable } from '@/components/animated-pressable';
+import { GlassCard } from '@/components/glass-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { useGradients, useTheme } from '@/hooks/use-theme';
 import { streamAssistantReply } from '@/lib/chat-engine';
 import { generateId } from '@/lib/id';
 import { appendMessage, listMessages } from '@/lib/mock-db';
@@ -25,6 +28,7 @@ import type { Message } from '@nova/shared';
 export default function ChatThreadScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
+  const gradients = useGradients();
   const queryClient = useQueryClient();
   const scrollRef = useRef<ScrollView>(null);
 
@@ -119,7 +123,7 @@ export default function ChatThreadScreen() {
             <MessageBubble key={message.id} message={message} />
           ))}
         </ScrollView>
-        <View style={[styles.inputBar, { borderColor: theme.border, backgroundColor: theme.backgroundElement }]}>
+        <GlassCard radius={Radius.large} noShadow style={styles.inputBar}>
           <TextInput
             value={draft}
             onChangeText={setDraft}
@@ -128,16 +132,19 @@ export default function ChatThreadScreen() {
             style={[styles.input, { color: theme.text }]}
             multiline
           />
-          <Pressable
+          <AnimatedPressable
             onPress={onSend}
             disabled={!draft.trim() || streaming}
-            style={[
-              styles.sendButton,
-              { backgroundColor: theme.primary, opacity: !draft.trim() || streaming ? 0.5 : 1 },
-            ]}>
-            <Ionicons name="arrow-up" size={18} color={theme.primaryText} />
-          </Pressable>
-        </View>
+            style={{ opacity: !draft.trim() || streaming ? 0.5 : 1 }}>
+            <LinearGradient
+              colors={gradients.primary}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.sendButton}>
+              <Ionicons name="arrow-up" size={18} color={theme.primaryText} />
+            </LinearGradient>
+          </AnimatedPressable>
+        </GlassCard>
       </ThemedView>
     </KeyboardAvoidingView>
   );
@@ -145,22 +152,27 @@ export default function ChatThreadScreen() {
 
 function MessageBubble({ message }: { message: Message }) {
   const theme = useTheme();
+  const gradients = useGradients();
   const isUser = message.role === 'user';
 
-  return (
-    <View style={[styles.bubbleRow, { justifyContent: isUser ? 'flex-end' : 'flex-start' }]}>
-      <View
-        style={[
-          styles.bubble,
-          {
-            backgroundColor: isUser ? theme.primary : theme.backgroundElement,
-            borderTopRightRadius: isUser ? 4 : Spacing.three,
-            borderTopLeftRadius: isUser ? Spacing.three : 4,
-          },
-        ]}>
-        {isUser ? (
+  if (isUser) {
+    return (
+      <Animated.View entering={FadeInUp.duration(220)} style={[styles.bubbleRow, { justifyContent: 'flex-end' }]}>
+        <LinearGradient
+          colors={gradients.primary}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.bubble, styles.userBubble]}>
           <ThemedText themeColor="primaryText">{message.content}</ThemedText>
-        ) : message.content ? (
+        </LinearGradient>
+      </Animated.View>
+    );
+  }
+
+  return (
+    <Animated.View entering={FadeInUp.duration(220)} style={[styles.bubbleRow, { justifyContent: 'flex-start' }]}>
+      <GlassCard radius={Radius.large} style={[styles.bubble, styles.assistantBubble]} noShadow>
+        {message.content ? (
           <Markdown
             style={{
               body: { color: theme.text, fontSize: 16 },
@@ -173,27 +185,33 @@ function MessageBubble({ message }: { message: Message }) {
         ) : (
           <ThemedText themeColor="textSecondary">Nova is thinking…</ThemedText>
         )}
-      </View>
-    </View>
+      </GlassCard>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
   list: { padding: Spacing.three, gap: Spacing.two },
-  bubbleRow: { flexDirection: 'row' },
+  bubbleRow: { flexDirection: 'row', marginBottom: Spacing.one },
   bubble: {
     maxWidth: '82%',
-    borderRadius: Spacing.three,
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
+    paddingVertical: Spacing.two + 2,
+  },
+  userBubble: {
+    borderRadius: Radius.large,
+    borderBottomRightRadius: 6,
+  },
+  assistantBubble: {
+    borderBottomLeftRadius: 6,
   },
   inputBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     gap: Spacing.two,
     padding: Spacing.two,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    margin: Spacing.two,
   },
   input: {
     flex: 1,

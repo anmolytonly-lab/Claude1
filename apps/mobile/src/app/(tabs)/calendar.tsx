@@ -1,15 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Alert, Modal, Pressable, SectionList, StyleSheet, TextInput, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { AnimatedPressable } from '@/components/animated-pressable';
 import { EmptyState } from '@/components/empty-state';
+import { GlassCard } from '@/components/glass-card';
+import { GradientButton } from '@/components/gradient-button';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { useActiveScheme, useGradients, useTheme } from '@/hooks/use-theme';
 import { createCalendarEvent, deleteCalendarEvent, listCalendarEvents } from '@/lib/mock-db';
 import type { CalendarEvent } from '@nova/shared';
 
@@ -45,7 +51,7 @@ export default function CalendarScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ScreenHeader title="Calendar" onAddPress={() => setModalVisible(true)} addLabel="New event" />
+      <ScreenHeader title="Calendar" subtitle={`${events.length} upcoming`} onAddPress={() => setModalVisible(true)} addLabel="New event" />
       {events.length === 0 ? (
         <EmptyState icon="calendar-outline" title="Nothing scheduled" message="Tap + to add your first event." />
       ) : (
@@ -58,7 +64,9 @@ export default function CalendarScreen() {
               {section.title.toUpperCase()}
             </ThemedText>
           )}
-          renderItem={({ item }) => <EventRow event={item} onDelete={() => confirmDelete(item)} />}
+          renderItem={({ item, index }) => (
+            <EventRow event={item} index={index} onDelete={() => confirmDelete(item)} />
+          )}
         />
       )}
 
@@ -67,28 +75,32 @@ export default function CalendarScreen() {
   );
 }
 
-function EventRow({ event, onDelete }: { event: CalendarEvent; onDelete: () => void }) {
+function EventRow({ event, index, onDelete }: { event: CalendarEvent; index: number; onDelete: () => void }) {
   const theme = useTheme();
+  const gradients = useGradients();
   return (
-    <View style={[styles.row, { borderColor: theme.border, backgroundColor: theme.backgroundElement }]}>
-      <View style={styles.timeColumn}>
-        <ThemedText type="smallBold">{dayjs(event.startsAt).format('h:mm A')}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {dayjs(event.endsAt).format('h:mm A')}
-        </ThemedText>
-      </View>
-      <View style={styles.rowText}>
-        <ThemedText type="smallBold">{event.title}</ThemedText>
-        {event.location && (
-          <ThemedText type="small" themeColor="textSecondary">
-            {event.location}
+    <Animated.View entering={FadeInDown.delay(index * 40).duration(280)}>
+      <GlassCard style={styles.row} radius={Radius.large}>
+        <LinearGradient colors={gradients.primary} style={styles.timeColumn}>
+          <ThemedText type="smallBold" themeColor="primaryText">
+            {dayjs(event.startsAt).format('h:mm')}
           </ThemedText>
-        )}
-      </View>
-      <Pressable onPress={onDelete} hitSlop={8}>
-        <Ionicons name="trash-outline" size={18} color={theme.textSecondary} />
-      </Pressable>
-    </View>
+          <ThemedText type="small" themeColor="primaryText" style={{ opacity: 0.85 }}>
+            {dayjs(event.startsAt).format('A')}
+          </ThemedText>
+        </LinearGradient>
+        <View style={styles.rowText}>
+          <ThemedText type="smallBold">{event.title}</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">
+            until {dayjs(event.endsAt).format('h:mm A')}
+            {event.location ? ` · ${event.location}` : ''}
+          </ThemedText>
+        </View>
+        <AnimatedPressable onPress={onDelete} hitSlop={8}>
+          <Ionicons name="trash-outline" size={18} color={theme.textSecondary} />
+        </AnimatedPressable>
+      </GlassCard>
+    </Animated.View>
   );
 }
 
@@ -102,6 +114,7 @@ function NewEventModal({
   onCreated: () => void;
 }) {
   const theme = useTheme();
+  const scheme = useActiveScheme();
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(dayjs().add(1, 'day').format('YYYY-MM-DD'));
   const [startTime, setStartTime] = useState('09:00');
@@ -123,7 +136,8 @@ function NewEventModal({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.modalBackdrop}>
-        <ThemedView type="background" style={styles.modalCard}>
+        <BlurView intensity={30} tint={scheme === 'dark' ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+        <ThemedView type="backgroundElement" style={styles.modalCard}>
           <ThemedText type="smallBold">New event</ThemedText>
           <TextInput
             value={title}
@@ -141,14 +155,10 @@ function NewEventModal({
             <Field label="End (HH:mm)" value={endTime} onChangeText={setEndTime} />
           </View>
           <View style={styles.modalActions}>
-            <Pressable onPress={onClose} style={styles.modalButton}>
+            <Pressable onPress={onClose} style={styles.cancelButton}>
               <ThemedText themeColor="textSecondary">Cancel</ThemedText>
             </Pressable>
-            <Pressable
-              onPress={() => title.trim() && create.mutate()}
-              style={[styles.modalButton, { backgroundColor: theme.primary, borderRadius: Spacing.two }]}>
-              <ThemedText themeColor="primaryText">Add</ThemedText>
-            </Pressable>
+            <GradientButton label="Add" onPress={() => title.trim() && create.mutate()} disabled={!title.trim()} />
           </View>
         </ThemedView>
       </View>
@@ -188,23 +198,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-    borderRadius: Spacing.three,
-    borderWidth: StyleSheet.hairlineWidth,
     padding: Spacing.three,
     marginBottom: Spacing.two,
   },
-  timeColumn: { width: 76, gap: 2 },
+  timeColumn: {
+    width: 64,
+    paddingVertical: Spacing.two,
+    borderRadius: Radius.medium,
+    alignItems: 'center',
+    gap: 2,
+  },
   rowText: { flex: 1, gap: 2 },
-  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalCard: { padding: Spacing.four, gap: Spacing.three, borderTopLeftRadius: Spacing.four, borderTopRightRadius: Spacing.four },
+  modalBackdrop: { flex: 1, justifyContent: 'flex-end' },
+  modalCard: {
+    padding: Spacing.four,
+    gap: Spacing.three,
+    borderTopLeftRadius: Radius.large,
+    borderTopRightRadius: Radius.large,
+  },
   input: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.medium,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two + 2,
     fontSize: 16,
   },
   fieldRow: { flexDirection: 'row', gap: Spacing.three },
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: Spacing.three, marginTop: Spacing.two },
-  modalButton: { paddingHorizontal: Spacing.four, paddingVertical: Spacing.two },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: Spacing.three, marginTop: Spacing.two },
+  cancelButton: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
 });

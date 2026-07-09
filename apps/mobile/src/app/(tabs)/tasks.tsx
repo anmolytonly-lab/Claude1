@@ -1,15 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import dayjs from 'dayjs';
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { Modal, Pressable, SectionList, StyleSheet, TextInput, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 
+import { AnimatedPressable } from '@/components/animated-pressable';
 import { EmptyState } from '@/components/empty-state';
+import { GlassCard } from '@/components/glass-card';
+import { GradientButton } from '@/components/gradient-button';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { useActiveScheme, useGradients, useTheme } from '@/hooks/use-theme';
 import { createTask, deleteTask, listTasks, setTaskStatus } from '@/lib/mock-db';
 import type { Task, TaskPriority, TaskStatus } from '@nova/shared';
 
@@ -57,7 +63,7 @@ export default function TasksScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <ScreenHeader title="Tasks" onAddPress={() => setModalVisible(true)} addLabel="New task" />
+      <ScreenHeader title="Tasks" subtitle={`${tasks.length} total`} onAddPress={() => setModalVisible(true)} addLabel="New task" />
       {tasks.length === 0 ? (
         <EmptyState icon="checkbox-outline" title="No tasks yet" message="Tap + to add your first task." />
       ) : (
@@ -70,8 +76,13 @@ export default function TasksScreen() {
               {section.title.toUpperCase()}
             </ThemedText>
           )}
-          renderItem={({ item }) => (
-            <TaskRow task={item} onCycle={() => cycleStatus.mutate(item)} onDelete={() => removeTask.mutate(item.id)} />
+          renderItem={({ item, index }) => (
+            <TaskRow
+              task={item}
+              index={index}
+              onCycle={() => cycleStatus.mutate(item)}
+              onDelete={() => removeTask.mutate(item.id)}
+            />
           )}
         />
       )}
@@ -81,38 +92,53 @@ export default function TasksScreen() {
   );
 }
 
-function TaskRow({ task, onCycle, onDelete }: { task: Task; onCycle: () => void; onDelete: () => void }) {
+function TaskRow({
+  task,
+  index,
+  onCycle,
+  onDelete,
+}: {
+  task: Task;
+  index: number;
+  onCycle: () => void;
+  onDelete: () => void;
+}) {
   const theme = useTheme();
+  const gradients = useGradients();
+  const isDone = task.status === 'done';
+
   return (
-    <View style={[styles.row, { borderColor: theme.border, backgroundColor: theme.backgroundElement }]}>
-      <Pressable onPress={onCycle} hitSlop={8} style={styles.checkbox}>
-        <Ionicons
-          name={task.status === 'done' ? 'checkmark-circle' : 'ellipse-outline'}
-          size={24}
-          color={task.status === 'done' ? theme.success : theme.textSecondary}
-        />
-      </Pressable>
-      <View style={styles.rowText}>
-        <ThemedText
-          type="smallBold"
-          style={task.status === 'done' ? styles.doneText : undefined}>
-          {task.title}
-        </ThemedText>
-        <View style={styles.metaRow}>
-          <ThemedText type="small" themeColor={PRIORITY_COLOR[task.priority]}>
-            {task.priority.toUpperCase()}
-          </ThemedText>
-          {task.dueDate && (
-            <ThemedText type="small" themeColor="textSecondary">
-              · due {dayjs(task.dueDate).format('MMM D')}
-            </ThemedText>
+    <Animated.View entering={FadeInDown.delay(index * 30).duration(280)}>
+      <GlassCard style={styles.row} radius={Radius.large}>
+        <AnimatedPressable onPress={onCycle} hitSlop={8} style={styles.checkbox} scaleTo={0.85}>
+          {isDone ? (
+            <LinearGradient colors={gradients.success} style={styles.checkCircle}>
+              <Ionicons name="checkmark" size={16} color={theme.primaryText} />
+            </LinearGradient>
+          ) : (
+            <View style={[styles.checkCircleOutline, { borderColor: theme.textSecondary }]} />
           )}
+        </AnimatedPressable>
+        <View style={styles.rowText}>
+          <ThemedText type="smallBold" style={isDone ? styles.doneText : undefined}>
+            {task.title}
+          </ThemedText>
+          <View style={styles.metaRow}>
+            <ThemedText type="small" themeColor={PRIORITY_COLOR[task.priority]}>
+              {task.priority.toUpperCase()}
+            </ThemedText>
+            {task.dueDate && (
+              <ThemedText type="small" themeColor="textSecondary">
+                · due {dayjs(task.dueDate).format('MMM D')}
+              </ThemedText>
+            )}
+          </View>
         </View>
-      </View>
-      <Pressable onPress={onDelete} hitSlop={8}>
-        <Ionicons name="trash-outline" size={18} color={theme.textSecondary} />
-      </Pressable>
-    </View>
+        <AnimatedPressable onPress={onDelete} hitSlop={8}>
+          <Ionicons name="trash-outline" size={18} color={theme.textSecondary} />
+        </AnimatedPressable>
+      </GlassCard>
+    </Animated.View>
   );
 }
 
@@ -126,6 +152,8 @@ function NewTaskModal({
   onCreated: () => void;
 }) {
   const theme = useTheme();
+  const gradients = useGradients();
+  const scheme = useActiveScheme();
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
 
@@ -142,7 +170,8 @@ function NewTaskModal({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <View style={styles.modalBackdrop}>
-        <ThemedView type="background" style={styles.modalCard}>
+        <BlurView intensity={30} tint={scheme === 'dark' ? 'dark' : 'light'} style={StyleSheet.absoluteFill} />
+        <ThemedView type="backgroundElement" style={styles.modalCard}>
           <ThemedText type="smallBold">New task</ThemedText>
           <TextInput
             value={title}
@@ -153,29 +182,30 @@ function NewTaskModal({
             autoFocus
           />
           <View style={styles.priorityRow}>
-            {(['low', 'medium', 'high'] as TaskPriority[]).map((p) => (
-              <Pressable
-                key={p}
-                onPress={() => setPriority(p)}
-                style={[
-                  styles.priorityChip,
-                  { borderColor: theme.border, backgroundColor: priority === p ? theme.primary : 'transparent' },
-                ]}>
-                <ThemedText type="small" themeColor={priority === p ? 'primaryText' : 'text'}>
-                  {p}
-                </ThemedText>
-              </Pressable>
-            ))}
+            {(['low', 'medium', 'high'] as TaskPriority[]).map((p) => {
+              const active = priority === p;
+              return (
+                <Pressable key={p} onPress={() => setPriority(p)} style={styles.priorityChipWrap}>
+                  {active ? (
+                    <LinearGradient colors={gradients.primary} style={styles.priorityChip}>
+                      <ThemedText type="small" themeColor="primaryText">
+                        {p}
+                      </ThemedText>
+                    </LinearGradient>
+                  ) : (
+                    <View style={[styles.priorityChip, { borderColor: theme.border, borderWidth: StyleSheet.hairlineWidth }]}>
+                      <ThemedText type="small">{p}</ThemedText>
+                    </View>
+                  )}
+                </Pressable>
+              );
+            })}
           </View>
           <View style={styles.modalActions}>
-            <Pressable onPress={onClose} style={styles.modalButton}>
+            <Pressable onPress={onClose} style={styles.cancelButton}>
               <ThemedText themeColor="textSecondary">Cancel</ThemedText>
             </Pressable>
-            <Pressable
-              onPress={() => title.trim() && create.mutate()}
-              style={[styles.modalButton, { backgroundColor: theme.primary, borderRadius: Spacing.two }]}>
-              <ThemedText themeColor="primaryText">Add</ThemedText>
-            </Pressable>
+            <GradientButton label="Add" onPress={() => title.trim() && create.mutate()} disabled={!title.trim()} />
           </View>
         </ThemedView>
       </View>
@@ -191,31 +221,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.two,
-    borderRadius: Spacing.three,
-    borderWidth: StyleSheet.hairlineWidth,
     padding: Spacing.three,
     marginBottom: Spacing.two,
   },
   checkbox: { paddingRight: Spacing.one },
+  checkCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkCircleOutline: {
+    width: 26,
+    height: 26,
+    borderRadius: Radius.pill,
+    borderWidth: 2,
+  },
   rowText: { flex: 1, gap: 2 },
   metaRow: { flexDirection: 'row', gap: 4 },
   doneText: { textDecorationLine: 'line-through', opacity: 0.6 },
-  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalCard: { padding: Spacing.four, gap: Spacing.three, borderTopLeftRadius: Spacing.four, borderTopRightRadius: Spacing.four },
+  modalBackdrop: { flex: 1, justifyContent: 'flex-end' },
+  modalCard: {
+    padding: Spacing.four,
+    gap: Spacing.three,
+    borderTopLeftRadius: Radius.large,
+    borderTopRightRadius: Radius.large,
+  },
   input: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Spacing.two,
+    borderRadius: Radius.medium,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two + 2,
     fontSize: 16,
   },
   priorityRow: { flexDirection: 'row', gap: Spacing.two },
+  priorityChipWrap: { borderRadius: Radius.pill, overflow: 'hidden' },
   priorityChip: {
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one + 2,
-    borderRadius: Spacing.five,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: Radius.pill,
   },
-  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: Spacing.three, marginTop: Spacing.two },
-  modalButton: { paddingHorizontal: Spacing.four, paddingVertical: Spacing.two },
+  modalActions: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: Spacing.three, marginTop: Spacing.two },
+  cancelButton: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.two },
 });

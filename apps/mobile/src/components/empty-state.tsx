@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { ComponentProps } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { useGradients, useTheme } from '@/hooks/use-theme';
 
 interface EmptyStateProps {
   icon: ComponentProps<typeof Ionicons>['name'];
@@ -14,16 +16,19 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, message }: EmptyStateProps) {
   const theme = useTheme();
+  const gradients = useGradients();
   return (
-    <View style={styles.container}>
-      <Ionicons name={icon} size={40} color={theme.textSecondary} />
+    <Animated.View entering={FadeIn.duration(350)} style={styles.container}>
+      <LinearGradient colors={gradients.hero} style={styles.iconBadge}>
+        <Ionicons name={icon} size={32} color={theme.primary} />
+      </LinearGradient>
       <ThemedText type="smallBold" style={styles.title}>
         {title}
       </ThemedText>
       <ThemedText type="small" themeColor="textSecondary" style={styles.message}>
         {message}
       </ThemedText>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -34,6 +39,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: Spacing.two,
     paddingHorizontal: Spacing.five,
+  },
+  iconBadge: {
+    width: 76,
+    height: 76,
+    borderRadius: Radius.large + 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.one,
   },
   title: { textAlign: 'center' },
   message: { textAlign: 'center' },

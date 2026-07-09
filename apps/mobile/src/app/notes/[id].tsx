@@ -1,19 +1,21 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { useGradients, useTheme } from '@/hooks/use-theme';
 import { deleteNote, getNote, updateNote } from '@/lib/mock-db';
 
 export default function NoteEditorScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
+  const gradients = useGradients();
   const queryClient = useQueryClient();
 
   const { data: note } = useQuery({ queryKey: ['note', id], queryFn: () => getNote(id), enabled: !!id });
@@ -66,17 +68,27 @@ export default function NoteEditorScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={[styles.toolbar, { borderColor: theme.border }]}>
-        <View style={styles.modeSwitch}>
-          <Pressable onPress={() => setMode('edit')} style={styles.modeButton}>
-            <ThemedText themeColor={mode === 'edit' ? 'primary' : 'textSecondary'} type="smallBold">
-              Edit
-            </ThemedText>
-          </Pressable>
-          <Pressable onPress={() => setMode('preview')} style={styles.modeButton}>
-            <ThemedText themeColor={mode === 'preview' ? 'primary' : 'textSecondary'} type="smallBold">
-              Preview
-            </ThemedText>
-          </Pressable>
+        <View style={[styles.modeSwitch, { backgroundColor: theme.backgroundElement }]}>
+          {(['edit', 'preview'] as const).map((m) => {
+            const active = mode === m;
+            return (
+              <Pressable key={m} onPress={() => setMode(m)} style={styles.modeButtonWrap}>
+                {active ? (
+                  <LinearGradient colors={gradients.primary} style={styles.modeButton}>
+                    <ThemedText type="smallBold" themeColor="primaryText">
+                      {m === 'edit' ? 'Edit' : 'Preview'}
+                    </ThemedText>
+                  </LinearGradient>
+                ) : (
+                  <View style={styles.modeButton}>
+                    <ThemedText type="smallBold" themeColor="textSecondary">
+                      {m === 'edit' ? 'Edit' : 'Preview'}
+                    </ThemedText>
+                  </View>
+                )}
+              </Pressable>
+            );
+          })}
         </View>
         <Pressable onPress={confirmDelete} hitSlop={8}>
           <Ionicons name="trash-outline" size={20} color={theme.textSecondary} />
@@ -124,8 +136,9 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.two,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  modeSwitch: { flexDirection: 'row', gap: Spacing.four },
-  modeButton: { paddingVertical: Spacing.one },
+  modeSwitch: { flexDirection: 'row', borderRadius: Radius.pill, padding: 3, overflow: 'hidden' },
+  modeButtonWrap: { borderRadius: Radius.pill, overflow: 'hidden' },
+  modeButton: { paddingVertical: Spacing.one + 2, paddingHorizontal: Spacing.three, borderRadius: Radius.pill },
   editArea: { padding: Spacing.four, gap: Spacing.three },
   titleInput: { fontSize: 22, fontWeight: '700' },
   contentInput: { fontSize: 16, minHeight: 300 },
