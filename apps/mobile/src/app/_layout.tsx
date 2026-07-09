@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
 import { useActiveScheme, useTheme } from '@/hooks/use-theme';
+import { useApiSettingsStore } from '@/lib/api-settings-store';
 import { queryClient } from '@/lib/query-client';
 import { useSessionStore } from '@/lib/session-store';
 
@@ -44,12 +45,14 @@ const navigationThemes = {
 function AppNavigator() {
   const status = useSessionStore((s) => s.status);
   const hydrate = useSessionStore((s) => s.hydrate);
+  const hydrateApiSettings = useApiSettingsStore((s) => s.hydrate);
   const scheme = useActiveScheme();
   const theme = useTheme();
 
   useEffect(() => {
     hydrate();
-  }, [hydrate]);
+    hydrateApiSettings();
+  }, [hydrate, hydrateApiSettings]);
 
   useEffect(() => {
     if (status !== 'loading') {
